@@ -2,7 +2,9 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>JavaScript Tetris Ultimate</title>
+  <!-- 모바일 화면에 맞게 스케일 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JavaScript Tetris Ultimate (Mobile Friendly)</title>
   <style>
     * {
       box-sizing: border-box;
@@ -18,6 +20,7 @@
       color: #fff;
       background: radial-gradient(circle at top, #222 0, #000 60%);
       transition: background 0.6s ease, filter 0.6s ease;
+      -webkit-font-smoothing: antialiased;
     }
 
     /* 점수 구간에 따른 배경 색 변화 */
@@ -38,11 +41,11 @@
     .game-container {
       display: flex;
       gap: 20px;
-      padding: 20px;
+      padding: 16px;
       background: rgba(20, 20, 20, 0.95);
       border-radius: 16px;
       box-shadow: 0 0 30px rgba(0,0,0,0.7);
-      max-width: 900px;
+      max-width: 960px;
       width: 100%;
       border: 1px solid #444;
     }
@@ -50,7 +53,7 @@
     .left-panel {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
       align-items: center;
       flex: 1;
       position: relative; /* 콤보 이펙트용 */
@@ -61,26 +64,27 @@
       border-radius: 6px;
       box-shadow: 0 0 12px rgba(0,0,0,0.9), inset 0 0 10px rgba(0,0,0,0.8);
       width: 100%;
-      max-width: 320px;
+      max-width: 360px;
       height: auto;
       aspect-ratio: 10 / 20;
       border: 3px solid #555;
       transition: box-shadow 0.4s ease, border-color 0.4s ease, background 0.4s ease;
+      touch-action: none;
     }
 
     .buttons {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 8px;
+      gap: 10px;
       width: 100%;
-      max-width: 360px;
+      max-width: 420px;
     }
 
     .right-panel {
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 14px;
       min-width: 220px;
     }
 
@@ -139,17 +143,21 @@
 
     button {
       border: none;
-      padding: 8px 12px;
+      padding: 9px 14px;
       border-radius: 999px;
       background: #4caf50;
       color: white;
       cursor: pointer;
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 600;
       transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease, opacity 0.1s ease;
       display: inline-flex;
       align-items: center;
       gap: 4px;
+      min-width: 90px;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
 
     button:hover {
@@ -232,27 +240,29 @@
       margin-top: 8px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
       width: 100%;
-      max-width: 360px;
+      max-width: 420px;
       user-select: none;
     }
 
     .touch-row {
       display: flex;
       justify-content: center;
-      gap: 6px;
+      gap: 10px;
     }
 
     .touch-btn {
       flex: 1;
-      padding: 10px 0;
-      font-size: 14px;
-      border-radius: 10px;
+      padding: 14px 0;
+      font-size: 16px;
+      border-radius: 12px;
       background: #424242;
       border: 1px solid #666;
       box-shadow: 0 2px 6px rgba(0,0,0,0.7);
       color: #fff;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
 
     .touch-btn:active {
@@ -261,7 +271,7 @@
     }
 
     .touch-label {
-      font-size: 10px;
+      font-size: 11px;
       text-align: center;
       color: #888;
     }
@@ -279,20 +289,47 @@
       color: #ccc;
     }
 
+    /* 작은 화면일수록 글자/버튼 조금 더 키우기 & 우측 패널 줄이기 */
     @media (max-width: 700px) {
       .game-container {
         flex-direction: column;
         align-items: center;
+        padding: 12px;
       }
       .right-panel {
         width: 100%;
         flex-direction: row;
         flex-wrap: wrap;
         justify-content: center;
+        gap: 10px;
       }
       .info-box {
         min-width: 150px;
         flex: 1 1 45%;
+      }
+      .hud-value {
+        font-size: 22px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      #board {
+        max-width: 420px;
+        width: 90vw;
+      }
+      .hud-value {
+        font-size: 20px;
+      }
+      .info-box {
+        padding: 8px 10px;
+      }
+      button {
+        font-size: 13px;
+        padding: 9px 12px;
+      }
+      .touch-btn {
+        padding: 16px 0;
+        font-size: 17px;
       }
     }
   </style>
@@ -314,15 +351,15 @@
       <!-- 모바일 & PC 클릭용 터치 버튼 -->
       <div class="touch-controls">
         <div class="touch-row">
-          <button class="touch-btn" id="btnLeft">⬅</button>
-          <button class="touch-btn" id="btnDown">⬇</button>
-          <button class="touch-btn" id="btnRight">➡</button>
+          <button class="touch-btn" id="btnLeft">⬅ 왼쪽</button>
+          <button class="touch-btn" id="btnDown">⬇ 아래</button>
+          <button class="touch-btn" id="btnRight">➡ 오른쪽</button>
         </div>
         <div class="touch-row">
           <button class="touch-btn" id="btnRotate">⟳ 회전</button>
           <button class="touch-btn danger" id="btnDrop">⬇⬇ 하드드랍</button>
         </div>
-        <div class="touch-label">※ 모바일 터치용 (PC에서도 클릭 가능)</div>
+        <div class="touch-label">※ 모바일에서도 버튼이 크게 보이도록 최적화됨</div>
       </div>
     </div>
 
@@ -1080,14 +1117,14 @@
       }
     });
 
-    // 버튼 이벤트
+    // 버튼 이벤트 (PC 마우스용)
     startBtn.addEventListener("click", startGame);
     pauseBtn.addEventListener("click", togglePause);
     saveBtn.addEventListener("click", saveGame);
     loadBtn.addEventListener("click", loadGame);
     soundBtn.addEventListener("click", toggleSound);
 
-    // 터치/클릭 컨트롤
+    // 터치/클릭 컨트롤 – pointerdown으로 통합 (모바일 클릭 오류 감소)
     function safeAction(fn) {
       return () => {
         if (!running || gameOver || isPaused) return;
@@ -1095,11 +1132,18 @@
       };
     }
 
-    btnLeft.addEventListener("click", safeAction(() => moveHorizontal(-1)));
-    btnRight.addEventListener("click", safeAction(() => moveHorizontal(1)));
-    btnDown.addEventListener("click", safeAction(() => { moveDown(); dropCounter = 0; }));
-    btnRotate.addEventListener("click", safeAction(() => rotatePiece()));
-    btnDrop.addEventListener("click", safeAction(() => hardDrop()));
+    function bindControl(el, fn) {
+      el.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        safeAction(fn)();
+      });
+    }
+
+    bindControl(btnLeft, () => moveHorizontal(-1));
+    bindControl(btnRight, () => moveHorizontal(1));
+    bindControl(btnDown, () => { moveDown(); dropCounter = 0; });
+    bindControl(btnRotate, () => rotatePiece());
+    bindControl(btnDrop, () => hardDrop());
 
     // 초기 화면
     board = createBoard();
