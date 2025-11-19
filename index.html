@@ -1,1159 +1,1070 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <!-- 모바일 화면에 맞게 스케일 -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>JavaScript Tetris Ultimate (Mobile Friendly)</title>
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+	<meta charset="UTF-8" />
+	<!-- iPhone Safari 최적화 -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+	<title>Tetris Mobile Optimized</title>
+	<style>
+		* {
+			box-sizing: border-box;
+		}
 
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      color: #fff;
-      background: radial-gradient(circle at top, #222 0, #000 60%);
-      transition: background 0.6s ease, filter 0.6s ease;
-      -webkit-font-smoothing: antialiased;
-    }
+		body {
+			margin: 0;
+			min-height: 100dvh; /* iOS Safari 동적 바 포함 */
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+			color: #fff;
+			background: radial-gradient(circle at top, #222 0, #000 60%);
+			transition: background 0.6s ease, filter 0.6s ease;
+			-webkit-font-smoothing: antialiased;
+		}
 
-    /* 점수 구간에 따른 배경 색 변화 */
-    body.bg-1 {
-      background: radial-gradient(circle at top, #222 0, #000 60%);
-    }
-    body.bg-2 {
-      background: radial-gradient(circle at top, #1a237e 0, #000 60%);
-    }
-    body.bg-3 {
-      background: radial-gradient(circle at top, #4a148c 0, #000 60%);
-    }
-    body.bg-4 {
-      background: radial-gradient(circle at top, #b71c1c 0, #000 60%);
-      filter: brightness(1.08);
-    }
+		/* Background color change based on score range */
+		body.bg-1 {
+			background: radial-gradient(circle at top, #222 0, #000 60%);
+		}
+		body.bg-2 {
+			background: radial-gradient(circle at top, #1a237e 0, #000 60%);
+		}
+		body.bg-3 {
+			background: radial-gradient(circle at top, #4a148c 0, #000 60%);
+		}
+		body.bg-4 {
+			background: radial-gradient(circle at top, #b71c1c 0, #000 60%);
+			filter: brightness(1.08);
+		}
 
-    .game-container {
-      display: flex;
-      gap: 20px;
-      padding: 16px;
-      background: rgba(20, 20, 20, 0.95);
-      border-radius: 16px;
-      box-shadow: 0 0 30px rgba(0,0,0,0.7);
-      max-width: 960px;
-      width: 100%;
-      border: 1px solid #444;
-    }
+		.game-container {
+			display: flex;
+			gap: 20px;
+			padding: 16px;
+			background: rgba(20, 20, 20, 0.95);
+			border-radius: 16px;
+			box-shadow: 0 0 30px rgba(0,0,0,0.7);
+			max-width: 960px;
+			width: 100%;
+			border: 1px solid #444;
+		}
 
-    .left-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      align-items: center;
-      flex: 1;
-      position: relative; /* 콤보 이펙트용 */
-    }
+		.left-panel {
+			display: flex;
+			flex-direction: column;
+			gap: 10px;
+			align-items: center;
+			flex: 1;
+			position: relative; /* For combo effect */
+		}
 
-    #board {
-      background: #000;
-      border-radius: 6px;
-      box-shadow: 0 0 12px rgba(0,0,0,0.9), inset 0 0 10px rgba(0,0,0,0.8);
-      width: 100%;
-      max-width: 360px;
-      height: auto;
-      aspect-ratio: 10 / 20;
-      border: 3px solid #555;
-      transition: box-shadow 0.4s ease, border-color 0.4s ease, background 0.4s ease;
-      touch-action: none;
-    }
+		#board {
+			background: #000;
+			border-radius: 6px;
+			box-shadow: 0 0 12px rgba(0,0,0,0.9), inset 0 0 10px rgba(0,0,0,0.8);
+			width: 100%;
+			max-width: 360px;
+			height: auto;
+			aspect-ratio: 10 / 20;
+			border: 3px solid #555;
+			transition: box-shadow 0.4s ease, border-color 0.4s ease, background 0.4s ease;
+			touch-action: none;
+		}
 
-    .buttons {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 10px;
-      width: 100%;
-      max-width: 420px;
-    }
+		.right-panel {
+			display: flex;
+			flex-direction: column;
+			gap: 14px;
+			min-width: 220px;
+		}
 
-    .right-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      min-width: 220px;
-    }
+		.info-box {
+			padding: 10px 12px;
+			background: linear-gradient(135deg, #262626, #1a1a1a);
+			border-radius: 10px;
+			font-size: 14px;
+			border: 1px solid #444;
+			box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+		}
 
-    .info-box {
-      padding: 10px 12px;
-      background: linear-gradient(135deg, #262626, #1a1a1a);
-      border-radius: 10px;
-      font-size: 14px;
-      border: 1px solid #444;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.6);
-    }
+		.info-box h2 {
+			margin: 0 0 6px;
+			font-size: 14px;
+			letter-spacing: 0.08em;
+			text-transform: uppercase;
+			color: #aaa;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
 
-    .info-box h2 {
-      margin: 0 0 6px;
-      font-size: 14px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: #aaa;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+		.hud-value {
+			font-size: 26px;
+			font-weight: 700;
+			text-align: right;
+			font-family: "Courier New", monospace;
+			letter-spacing: 0.08em;
+			padding: 4px 0;
+			text-shadow: 0 0 6px rgba(0,255,180,0.5);
+			color: #00ffc6;
+		}
 
-    .hud-value {
-      font-size: 26px;
-      font-weight: 700;
-      text-align: right;
-      font-family: "Courier New", monospace;
-      letter-spacing: 0.08em;
-      padding: 4px 0;
-      text-shadow: 0 0 6px rgba(0,255,180,0.5);
-      color: #00ffc6;
-    }
+		.hud-value.level {
+			color: #ffeb3b;
+			text-shadow: 0 0 6px rgba(255,235,59,0.7);
+		}
 
-    .hud-value.level {
-      color: #ffeb3b;
-      text-shadow: 0 0 6px rgba(255,235,59,0.7);
-    }
+		/* Custom styles for combined HUD display */
+		.primary-hud {
+			display: flex;
+			flex-direction: column;
+			gap: 4px;
+		}
+		.primary-hud .hud-line {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			padding: 2px 0;
+		}
+		.primary-hud .hud-line .label {
+			font-size: 14px;
+			font-weight: 600;
+			color: #aaa;
+			text-transform: uppercase;
+			letter-spacing: 0.08em;
+		}
+		.primary-hud .hud-line .value {
+			font-size: 26px;
+			font-weight: 700;
+			font-family: "Courier New", monospace;
+			letter-spacing: 0.08em;
+			color: #00ffc6;
+			text-shadow: 0 0 6px rgba(0,255,180,0.5);
+		}
+		.primary-hud .hud-line .level-value {
+			color: #ffeb3b;
+			text-shadow: 0 0 6px rgba(255,235,59,0.7);
+		}
+		
+		.difficulty-label {
+			font-size: 12px;
+			font-weight: 600;
+			color: #ffb300;
+		}
 
-    .status-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
-      padding: 2px 8px;
-      border-radius: 999px;
-      background: rgba(0,0,0,0.4);
-      border: 1px solid #555;
-    }
+		button {
+			border: none;
+			padding: 10px 18px;
+			border-radius: 999px;
+			background: #4caf50;
+			color: white;
+			cursor: pointer;
+			font-size: 16px;
+			font-weight: 600;
+			transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease, opacity 0.1s ease;
+			display: inline-flex;
+			align-items: center;
+			gap: 4px;
+			min-width: 120px;
+			justify-content: center;
+			-webkit-tap-highlight-color: transparent;
+			touch-action: manipulation;
+		}
+		
+		#startBtn {
+			width: 100%;
+			max-width: 250px;
+			margin-bottom: 4px;
+		}
 
-    .difficulty-label {
-      font-size: 12px;
-      font-weight: 600;
-      color: #ffb300;
-    }
+		button:hover {
+			background: #43a047;
+			box-shadow: 0 0 10px rgba(76, 175, 80, 0.6);
+			transform: translateY(-1px);
+		}
 
-    button {
-      border: none;
-      padding: 9px 14px;
-      border-radius: 999px;
-      background: #4caf50;
-      color: white;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 600;
-      transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease, opacity 0.1s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      min-width: 90px;
-      justify-content: center;
-      -webkit-tap-highlight-color: transparent;
-      touch-action: manipulation;
-    }
+		button:active {
+			transform: translateY(1px);
+			box-shadow: none;
+		}
 
-    button:hover {
-      background: #43a047;
-      box-shadow: 0 0 10px rgba(76, 175, 80, 0.6);
-      transform: translateY(-1px);
-    }
+		button.danger {
+			background: #e53935;
+		}
 
-    button:active {
-      transform: translateY(1px);
-      box-shadow: none;
-    }
+		button.danger:hover {
+			background: #c62828;
+		}
 
-    button.secondary {
-      background: #607d8b;
-    }
+		.small {
+			font-size: 12px;
+			color: #aaa;
+			line-height: 1.5;
+		}
 
-    button.secondary:hover {
-      background: #546e7a;
-    }
+		#nextCanvas {
+			background: #000;
+			border-radius: 6px;
+			box-shadow: inset 0 0 10px rgba(0,0,0,0.9);
+			width: 100%;
+			max-width: 160px;
+			height: auto;
+			aspect-ratio: 1 / 1;
+			display: block;
+			border: 1px solid #555;
+		}
 
-    button.danger {
-      background: #e53935;
-    }
+		/* Combo effect */
+		.combo-effect {
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%) scale(0.8);
+			font-size: 32px;
+			font-weight: 800;
+			color: #ffeb3b;
+			text-shadow: 0 0 8px rgba(255,235,59,0.9), 0 0 16px rgba(255,255,255,0.7);
+			opacity: 0;
+			pointer-events: none;
+			transition: opacity 0.3s ease, transform 0.3s ease;
+		}
 
-    button.danger:hover {
-      background: #c62828;
-    }
+		.combo-effect.show {
+			opacity: 1;
+			transform: translate(-50%, -50%) scale(1.15);
+		}
 
-    button.muted {
-      opacity: 0.6;
-    }
+		/* Mobile touch controls */
+		.touch-controls {
+			margin-top: 4px;
+			display: flex;
+			flex-direction: column;
+			gap: 6px;
+			width: 100%;
+			max-width: 420px;
+			user-select: none;
+		}
 
-    .small {
-      font-size: 12px;
-      color: #aaa;
-      line-height: 1.5;
-    }
+		.touch-row {
+			display: flex;
+			justify-content: center;
+			gap: 8px;
+		}
 
-    #nextCanvas {
-      background: #000;
-      border-radius: 6px;
-      box-shadow: inset 0 0 10px rgba(0,0,0,0.9);
-      width: 100%;
-      max-width: 160px;
-      height: auto;
-      aspect-ratio: 1 / 1;
-      display: block;
-      border: 1px solid #555;
-    }
+		.touch-btn {
+			flex: 1;
+			padding: 14px 0;
+			font-size: 16px;
+			border-radius: 12px;
+			background: #424242;
+			border: 1px solid #666;
+			box-shadow: 0 2px 6px rgba(0,0,0,0.7);
+			color: #fff;
+			-webkit-tap-highlight-color: transparent;
+			touch-action: manipulation;
+		}
 
-    #status {
-      font-size: 13px;
-      padding: 4px 0 2px;
-      color: #eee;
-    }
+		.touch-btn:active {
+			transform: scale(0.96);
+			box-shadow: none;
+		}
 
-    /* 콤보 이펙트 */
-    .combo-effect {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) scale(0.8);
-      font-size: 32px;
-      font-weight: 800;
-      color: #ffeb3b;
-      text-shadow: 0 0 8px rgba(255,235,59,0.9), 0 0 16px rgba(255,255,255,0.7);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease, transform 0.3s ease;
-    }
+		.touch-label {
+			font-size: 11px;
+			text-align: center;
+			color: #888;
+		}
 
-    .combo-effect.show {
-      opacity: 1;
-      transform: translate(-50%, -50%) scale(1.15);
-    }
+		.ranking-list {
+			margin: 0;
+			padding-left: 18px;
+			max-height: 80px;
+			overflow-y: auto;
+		}
 
-    /* 모바일 터치 컨트롤 */
-    .touch-controls {
-      margin-top: 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      width: 100%;
-      max-width: 420px;
-      user-select: none;
-    }
+		.ranking-list li {
+			margin: 1px 0;
+			font-size: 12px;
+			color: #ccc;
+		}
 
-    .touch-row {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-    }
+		/* Responsive adjustments */
+		@media (max-width: 700px) {
+			body {
+				align-items: stretch;
+			}
 
-    .touch-btn {
-      flex: 1;
-      padding: 14px 0;
-      font-size: 16px;
-      border-radius: 12px;
-      background: #424242;
-      border: 1px solid #666;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.7);
-      color: #fff;
-      -webkit-tap-highlight-color: transparent;
-      touch-action: manipulation;
-    }
+			.game-container {
+				flex-direction: column;
+				align-items: center;
+				padding: 10px;
+				height: 100dvh;
+				max-height: 100dvh;
+				overflow: hidden; /* 전체 스크롤 방지 */
+			}
 
-    .touch-btn:active {
-      transform: scale(0.96);
-      box-shadow: none;
-    }
+			/* 보드 크기를 세로 기준으로 제한 (약 54vh) */
+			#board {
+				width: min(90vw, 27vh); /* height = 2 * width → 최대 약 54vh */
+				height: auto;
+				aspect-ratio: 10 / 20;
+				max-width: none;
+			}
 
-    .touch-label {
-      font-size: 11px;
-      text-align: center;
-      color: #888;
-    }
+			.left-panel {
+				gap: 6px;
+				flex: 0 0 auto;
+			}
 
-    .ranking-list {
-      margin: 0;
-      padding-left: 20px;
-      max-height: 160px;
-      overflow-y: auto;
-    }
+			.right-panel {
+				width: 100%;
+				flex-direction: row;
+				flex-wrap: wrap;
+				justify-content: center;
+				gap: 8px;
+				flex: 0 0 auto;
+			}
 
-    .ranking-list li {
-      margin: 2px 0;
-      font-size: 12px;
-      color: #ccc;
-    }
+			.info-box {
+				min-width: 150px;
+				flex: 1 1 45%;
+				padding: 8px 10px;
+			}
 
-    /* 작은 화면일수록 글자/버튼 조금 더 키우기 & 우측 패널 줄이기 */
-    @media (max-width: 700px) {
-      .game-container {
-        flex-direction: column;
-        align-items: center;
-        padding: 12px;
-      }
-      .right-panel {
-        width: 100%;
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 10px;
-      }
-      .info-box {
-        min-width: 150px;
-        flex: 1 1 45%;
-      }
-      .hud-value {
-        font-size: 22px;
-      }
-    }
+			.primary-hud {
+				flex: 1 1 100%;
+				order: -1; /* 모바일에서 맨 위 HUD */
+			}
 
-    @media (max-width: 480px) {
-      #board {
-        max-width: 420px;
-        width: 90vw;
-      }
-      .hud-value {
-        font-size: 20px;
-      }
-      .info-box {
-        padding: 8px 10px;
-      }
-      button {
-        font-size: 13px;
-        padding: 9px 12px;
-      }
-      .touch-btn {
-        padding: 16px 0;
-        font-size: 17px;
-      }
-    }
-  </style>
+			.primary-hud .hud-line .value,
+			.hud-value {
+				font-size: 20px;
+			}
+
+			.difficulty-label {
+				font-size: 11px;
+			}
+
+			#nextCanvas {
+				max-width: 110px;
+			}
+
+			.touch-controls {
+				margin-top: 4px;
+				gap: 4px;
+			}
+
+			.touch-btn {
+				padding: 12px 0;
+				font-size: 15px;
+			}
+
+			.ranking-list {
+				max-height: 64px;
+			}
+		}
+
+		@media (max-width: 480px) {
+			.primary-hud .hud-line .value,
+			.hud-value {
+				font-size: 18px;
+			}
+			.info-box {
+				padding: 6px 8px;
+			}
+			.touch-btn {
+				padding: 12px 0;
+				font-size: 14px;
+			}
+		}
+	</style>
 </head>
 <body>
-  <div class="game-container">
-    <div class="left-panel">
-      <canvas id="board"></canvas>
-      <div id="comboEffect" class="combo-effect"></div>
-
-      <div class="buttons">
-        <button id="startBtn">▶ Start / Restart</button>
-        <button id="pauseBtn" class="secondary">⏸ Pause</button>
-        <button id="saveBtn" class="secondary">💾 Save</button>
-        <button id="loadBtn" class="secondary">📂 Load</button>
-        <button id="soundBtn" class="secondary">🔊 BGM</button>
-      </div>
-
-      <!-- 모바일 & PC 클릭용 터치 버튼 -->
-      <div class="touch-controls">
-        <div class="touch-row">
-          <button class="touch-btn" id="btnLeft">⬅ 왼쪽</button>
-          <button class="touch-btn" id="btnDown">⬇ 아래</button>
-          <button class="touch-btn" id="btnRight">➡ 오른쪽</button>
-        </div>
-        <div class="touch-row">
-          <button class="touch-btn" id="btnRotate">⟳ 회전</button>
-          <button class="touch-btn danger" id="btnDrop">⬇⬇ 하드드랍</button>
-        </div>
-        <div class="touch-label">※ 모바일에서도 버튼이 크게 보이도록 최적화됨</div>
-      </div>
-    </div>
-
-    <div class="right-panel">
-      <div class="info-box">
-        <h2>
-          SCORE
-          <span class="status-pill">x100 pts</span>
-        </h2>
-        <div id="score" class="hud-value">0</div>
-      </div>
-
-      <div class="info-box">
-        <h2>
-          LEVEL
-          <span class="status-pill">
-            <span>speed</span>
-          </span>
-        </h2>
-        <div id="level" class="hud-value level">1</div>
-        <div class="small">
-          난이도: <span id="difficulty" class="difficulty-label">Easy</span>
-        </div>
-      </div>
-
-      <div class="info-box">
-        <h2>Combo</h2>
-        <div id="comboCount" class="hud-value">0</div>
-        <div class="small">MAX : <span id="maxCombo">0</span></div>
-      </div>
-
-      <div class="info-box">
-        <h2>Next</h2>
-        <canvas id="nextCanvas" width="120" height="120"></canvas>
-      </div>
-
-      <div class="info-box">
-        <h2>Controls</h2>
-        <div class="small">
-          ⌨ PC<br />
-          · ← → : 좌우 이동<br />
-          · ↓ : 빠르게 내리기<br />
-          · ↑ : 회전<br />
-          · Space : 하드드랍<br />
-          · P : 일시정지/재개<br /><br />
-          📱 모바일<br />
-          · 아래 터치 버튼 사용
-        </div>
-      </div>
-
-      <div class="info-box">
-        <h2>Status</h2>
-        <div id="status">멈춤</div>
-      </div>
-
-      <div class="info-box">
-        <h2>Ranking</h2>
-        <ol id="rankingList" class="small ranking-list"></ol>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==== 오디오 리소스 ==== -->
-  <audio id="bgm" src="bgm.mp3" loop></audio>
-  <audio id="se-move" src="move.mp3"></audio>
-  <audio id="se-rotate" src="rotate.mp3"></audio>
-  <audio id="se-drop" src="drop.mp3"></audio>
-  <audio id="se-clear" src="clear.mp3"></audio>
-  <audio id="se-gameover" src="gameover.mp3"></audio>
-
-  <script>
-    // ---- 기본 설정 ----
-    const COLS = 10;
-    const ROWS = 20;
-    const BLOCK_SIZE = 30;
-
-    const canvas = document.getElementById("board");
-    const ctx = canvas.getContext("2d");
-    canvas.width = COLS * BLOCK_SIZE;
-    canvas.height = ROWS * BLOCK_SIZE;
-
-    const nextCanvas = document.getElementById("nextCanvas");
-    const nextCtx = nextCanvas.getContext("2d");
-
-    const scoreEl = document.getElementById("score");
-    const levelEl = document.getElementById("level");
-    const statusEl = document.getElementById("status");
-    const startBtn = document.getElementById("startBtn");
-    const pauseBtn = document.getElementById("pauseBtn");
-    const saveBtn = document.getElementById("saveBtn");
-    const loadBtn = document.getElementById("loadBtn");
-    const soundBtn = document.getElementById("soundBtn");
-    const comboCountEl = document.getElementById("comboCount");
-    const maxComboEl = document.getElementById("maxCombo");
-    const comboEffectEl = document.getElementById("comboEffect");
-    const rankingListEl = document.getElementById("rankingList");
-    const difficultyEl = document.getElementById("difficulty");
-
-    // 모바일 버튼
-    const btnLeft = document.getElementById("btnLeft");
-    const btnRight = document.getElementById("btnRight");
-    const btnDown = document.getElementById("btnDown");
-    const btnRotate = document.getElementById("btnRotate");
-    const btnDrop = document.getElementById("btnDrop");
-
-    // 오디오
-    const bgm = document.getElementById("bgm");
-    const seMove = document.getElementById("se-move");
-    const seRotate = document.getElementById("se-rotate");
-    const seDrop = document.getElementById("se-drop");
-    const seClear = document.getElementById("se-clear");
-    const seGameover = document.getElementById("se-gameover");
-
-    let soundEnabled = true;
-
-    const STORAGE_KEY = "tetrisSave_v1";
-    const RANKING_KEY = "tetrisRanking_v1";
-
-    // 테트로미노 모양
-    const SHAPES = {
-      I: [[1,1,1,1]],
-      J: [
-        [1,0,0],
-        [1,1,1]
-      ],
-      L: [
-        [0,0,1],
-        [1,1,1]
-      ],
-      O: [
-        [1,1],
-        [1,1]
-      ],
-      S: [
-        [0,1,1],
-        [1,1,0]
-      ],
-      T: [
-        [0,1,0],
-        [1,1,1]
-      ],
-      Z: [
-        [1,1,0],
-        [0,1,1]
-      ]
-    };
-
-    const COLORS = {
-      I: "#00ffff",
-      J: "#0000ff",
-      L: "#ff9900",
-      O: "#ffff00",
-      S: "#00ff00",
-      T: "#8000ff",
-      Z: "#ff0000"
-    };
-
-    let board;
-    let currentPiece;
-    let nextPiece;
-    let gameOver = false;
-    let score = 0;
-    let level = 1;
-    let combo = 0;
-    let maxCombo = 0;
-
-    let dropInterval = 800; // ms
-    let lastTime = 0;
-    let dropCounter = 0;
-    let running = false;
-    let isPaused = false;
-
-    // ----- 유틸리티: 사운드 -----
-    function playSound(audio) {
-      if (!soundEnabled || !audio) return;
-      try {
-        audio.currentTime = 0;
-        audio.play();
-      } catch (e) {}
-    }
-
-    function playBgm() {
-      if (!soundEnabled) return;
-      try {
-        bgm.volume = 0.6;
-        bgm.play();
-      } catch (e) {}
-    }
-
-    function stopBgm() {
-      try {
-        bgm.pause();
-      } catch (e) {}
-    }
-
-    // ----- 배경 색 업데이트 (점수 기반) -----
-    function updateBackground() {
-      const body = document.body;
-      body.classList.remove("bg-1", "bg-2", "bg-3", "bg-4");
-      let cls = "bg-1";
-      if (score >= 2000) {
-        cls = "bg-4";
-      } else if (score >= 1200) {
-        cls = "bg-3";
-      } else if (score >= 500) {
-        cls = "bg-2";
-      }
-      body.classList.add(cls);
-    }
-
-    // ----- 레벨에 따른 보드 색 + 난이도 표시 -----
-    function updateDifficulty() {
-      let label = "";
-      let color = "";
-      let shadow = "";
-
-      if (level <= 3) {
-        label = "Easy";
-        color = "#4caf50";
-        shadow = "0 0 14px rgba(76,175,80,0.8), inset 0 0 10px rgba(0,0,0,0.8)";
-      } else if (level <= 6) {
-        label = "Normal";
-        color = "#2196f3";
-        shadow = "0 0 16px rgba(33,150,243,0.9), inset 0 0 10px rgba(0,0,0,0.8)";
-      } else if (level <= 10) {
-        label = "Hard";
-        color = "#ff9800";
-        shadow = "0 0 18px rgba(255,152,0,0.9), inset 0 0 10px rgba(0,0,0,0.8)";
-      } else {
-        label = "Insane";
-        color = "#f44336";
-        shadow = "0 0 22px rgba(244,67,54,1), inset 0 0 10px rgba(0,0,0,0.8)";
-      }
-
-      difficultyEl.textContent = label;
-      canvas.style.borderColor = color;
-      canvas.style.boxShadow = shadow;
-    }
-
-    // ----- 콤보 이펙트 -----
-    function showComboEffect() {
-      if (combo < 2) return; // 2콤보 이상
-      comboEffectEl.textContent = combo + " COMBO!";
-      comboEffectEl.classList.add("show");
-      setTimeout(() => comboEffectEl.classList.remove("show"), 400);
-    }
-
-    // 빈 보드 생성
-    function createBoard() {
-      const matrix = [];
-      for (let r = 0; r < ROWS; r++) {
-        matrix.push(new Array(COLS).fill(0));
-      }
-      return matrix;
-    }
-
-    function makePiece(type) {
-      return {
-        x: Math.floor(COLS / 2) - 2,
-        y: 0,
-        shape: SHAPES[type].map(row => row.slice()),
-        color: COLORS[type],
-        type: type
-      };
-    }
-
-    function randomPiece() {
-      const types = Object.keys(SHAPES);
-      const type = types[Math.floor(Math.random() * types.length)];
-      return makePiece(type);
-    }
-
-    function rotate(matrix) {
-      const N = matrix.length;
-      const M = matrix[0].length;
-      const result = [];
-      for (let x = 0; x < M; x++) {
-        const row = [];
-        for (let y = N - 1; y >= 0; y--) {
-          row.push(matrix[y][x]);
-        }
-        result.push(row);
-      }
-      return result;
-    }
-
-    function isValidMove(piece, offsetX, offsetY, newShape = null) {
-      const shape = newShape || piece.shape;
-      for (let y = 0; y < shape.length; y++) {
-        for (let x = 0; x < shape[y].length; x++) {
-          if (shape[y][x]) {
-            const newX = piece.x + x + offsetX;
-            const newY = piece.y + y + offsetY;
-
-            if (newX < 0 || newX >= COLS || newY >= ROWS) {
-              return false;
-            }
-
-            if (newY >= 0 && board[newY][newX]) {
-              return false;
-            }
-          }
-        }
-      }
-      return true;
-    }
-
-    function mergePiece() {
-      const shape = currentPiece.shape;
-      for (let y = 0; y < shape.length; y++) {
-        for (let x = 0; x < shape[y].length; x++) {
-          if (shape[y][x]) {
-            const boardY = currentPiece.y + y;
-            const boardX = currentPiece.x + x;
-            if (boardY >= 0 && boardY < ROWS && boardX >= 0 && boardX < COLS) {
-              board[boardY][boardX] = currentPiece.color;
-            }
-          }
-        }
-      }
-    }
-
-    // 줄 제거 + 콤보 처리
-    function clearLines() {
-      let linesCleared = 0;
-      for (let y = ROWS - 1; y >= 0; y--) {
-        let full = true;
-        for (let x = 0; x < COLS; x++) {
-          if (!board[y][x]) {
-            full = false;
-            break;
-          }
-        }
-        if (full) {
-          board.splice(y, 1);
-          board.unshift(new Array(COLS).fill(0));
-          linesCleared++;
-          y++;
-        }
-      }
-
-      if (linesCleared > 0) {
-        const points = [0, 40, 100, 300, 1200];
-        score += points[linesCleared] * level;
-        scoreEl.textContent = score.toLocaleString();
-
-        combo++;
-        if (combo > maxCombo) maxCombo = combo;
-        comboCountEl.textContent = combo;
-        maxComboEl.textContent = maxCombo;
-
-        playSound(seClear);
-        showComboEffect();
-        updateBackground();
-
-        const newLevel = Math.floor(score / 500) + 1;
-        if (newLevel !== level) {
-          level = newLevel;
-          levelEl.textContent = level;
-          dropInterval = Math.max(120, 800 - (level - 1) * 60);
-          updateDifficulty();
-        }
-      } else {
-        if (combo > 0) {
-          combo = 0;
-          comboCountEl.textContent = combo;
-        }
-      }
-    }
-
-    function moveDown(playSe = true) {
-      if (!isValidMove(currentPiece, 0, 1)) {
-        mergePiece();
-        clearLines();
-
-        currentPiece = {
-          x: Math.floor(COLS / 2) - 2,
-          y: 0,
-          shape: nextPiece.shape.map(r => r.slice()),
-          color: nextPiece.color,
-          type: nextPiece.type
-        };
-        nextPiece = randomPiece();
-        drawNext();
-
-        if (!isValidMove(currentPiece, 0, 0)) {
-          gameOver = true;
-          onGameOver();
-        }
-      } else {
-        currentPiece.y++;
-        if (playSe) playSound(seMove);
-      }
-      draw();
-    }
-
-    function hardDrop() {
-      if (gameOver || !running || isPaused) return;
-      while (isValidMove(currentPiece, 0, 1)) {
-        currentPiece.y++;
-      }
-      mergePiece();
-      clearLines();
-
-      currentPiece = {
-        x: Math.floor(COLS / 2) - 2,
-        y: 0,
-        shape: nextPiece.shape.map(r => r.slice()),
-        color: nextPiece.color,
-        type: nextPiece.type
-      };
-      nextPiece = randomPiece();
-      drawNext();
-
-      playSound(seDrop);
-
-      if (!isValidMove(currentPiece, 0, 0)) {
-        gameOver = true;
-        onGameOver();
-      }
-      draw();
-    }
-
-    function moveHorizontal(dir) {
-      if (!isValidMove(currentPiece, dir, 0)) return;
-      currentPiece.x += dir;
-      playSound(seMove);
-      draw();
-    }
-
-    function rotatePiece() {
-      const newShape = rotate(currentPiece.shape);
-      if (isValidMove(currentPiece, 0, 0, newShape)) {
-        currentPiece.shape = newShape;
-        playSound(seRotate);
-        draw();
-      }
-    }
-
-    function drawBlock(x, y, color) {
-      ctx.fillStyle = color;
-      ctx.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
-      ctx.strokeStyle = "#111";
-      ctx.lineWidth = 2;
-      ctx.strokeRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
-    }
-
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      for (let y = 0; y < ROWS; y++) {
-        for (let x = 0; x < COLS; x++) {
-          const cell = board[y][x];
-          if (cell) {
-            drawBlock(x, y, cell);
-          }
-        }
-      }
-
-      const shape = currentPiece.shape;
-      for (let y = 0; y < shape.length; y++) {
-        for (let x = 0; x < shape[y].length; x++) {
-          if (shape[y][x]) {
-            const drawX = currentPiece.x + x;
-            const drawY = currentPiece.y + y;
-            if (drawY >= 0) {
-              drawBlock(drawX, drawY, currentPiece.color);
-            }
-          }
-        }
-      }
-    }
-
-    function drawNext() {
-      nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
-      if (!nextPiece) return;
-
-      const size = Math.min(nextCanvas.width, nextCanvas.height);
-      const cellSize = size / 4;
-
-      const shape = nextPiece.shape;
-      const h = shape.length;
-      const w = shape[0].length;
-
-      const offsetX = (4 - w) / 2;
-      const offsetY = (4 - h) / 2;
-
-      for (let y = 0; y < h; y++) {
-        for (let x = 0; x < w; x++) {
-          if (shape[y][x]) {
-            const px = (x + offsetX) * cellSize;
-            const py = (y + offsetY) * cellSize;
-            nextCtx.fillStyle = nextPiece.color;
-            nextCtx.fillRect(px, py, cellSize, cellSize);
-            nextCtx.strokeStyle = "#111";
-            nextCtx.lineWidth = 2;
-            nextCtx.strokeRect(px, py, cellSize, cellSize);
-          }
-        }
-      }
-    }
-
-    // ---- 랭킹 ----
-    function loadRankingData() {
-      const str = localStorage.getItem(RANKING_KEY);
-      if (!str) return [];
-      try {
-        const data = JSON.parse(str);
-        return Array.isArray(data) ? data : [];
-      } catch (e) {
-        return [];
-      }
-    }
-
-    function saveRankingData(list) {
-      localStorage.setItem(RANKING_KEY, JSON.stringify(list));
-    }
-
-    function renderRanking() {
-      const ranking = loadRankingData();
-      rankingListEl.innerHTML = "";
-      if (ranking.length === 0) {
-        const li = document.createElement("li");
-        li.textContent = "기록 없음";
-        rankingListEl.appendChild(li);
-        return;
-      }
-      ranking.forEach((item, idx) => {
-        const li = document.createElement("li");
-        li.textContent = `${idx + 1}. ${item.name} - ${item.score.toLocaleString()}점`;
-        rankingListEl.appendChild(li);
-      });
-    }
-
-    function handleRankingOnGameOver() {
-      if (score <= 0) {
-        renderRanking();
-        return;
-      }
-      let name = prompt("게임 오버!\n이름을 입력하면 랭킹에 저장됩니다.", "Player");
-      if (name === null) {
-        renderRanking();
-        return;
-      }
-      name = name.trim();
-      if (!name) name = "Player";
-
-      const ranking = loadRankingData();
-      ranking.push({ name, score, date: new Date().toISOString() });
-      ranking.sort((a, b) => b.score - a.score);
-      ranking.splice(10);
-      saveRankingData(ranking);
-      renderRanking();
-    }
-
-    function onGameOver() {
-      statusEl.textContent = "Game Over";
-      stopBgm();
-      playSound(seGameover);
-      handleRankingOnGameOver();
-    }
-
-    // 메인 루프
-    function update(time = 0) {
-      if (!running) return;
-
-      const deltaTime = time - lastTime;
-      lastTime = time;
-
-      if (isPaused || gameOver) {
-        requestAnimationFrame(update);
-        return;
-      }
-
-      dropCounter += deltaTime;
-      if (dropCounter > dropInterval) {
-        moveDown(false);
-        dropCounter = 0;
-      }
-
-      requestAnimationFrame(update);
-    }
-
-    // 게임 시작/리셋
-    function startGame() {
-      board = createBoard();
-      currentPiece = randomPiece();
-      nextPiece = randomPiece();
-      gameOver = false;
-      score = 0;
-      level = 1;
-      combo = 0;
-      maxCombo = 0;
-      dropInterval = 800;
-      scoreEl.textContent = score;
-      levelEl.textContent = level;
-      comboCountEl.textContent = combo;
-      maxComboEl.textContent = maxCombo;
-      running = true;
-      isPaused = false;
-      statusEl.textContent = "플레이 중";
-      lastTime = 0;
-      dropCounter = 0;
-
-      draw();
-      drawNext();
-      updateBackground();
-      updateDifficulty();
-      pauseBtn.textContent = "⏸ Pause";
-
-      stopBgm();
-      playBgm();
-
-      requestAnimationFrame(update);
-    }
-
-    function togglePause() {
-      if (!running || gameOver) return;
-      isPaused = !isPaused;
-      if (isPaused) {
-        statusEl.textContent = "일시정지";
-        pauseBtn.textContent = "▶ Resume";
-        stopBgm();
-      } else {
-        statusEl.textContent = "플레이 중";
-        pauseBtn.textContent = "⏸ Pause";
-        playBgm();
-      }
-    }
-
-    function toggleSound() {
-      soundEnabled = !soundEnabled;
-      if (!soundEnabled) {
-        stopBgm();
-        soundBtn.classList.add("muted");
-        soundBtn.textContent = "🔇 BGM OFF";
-      } else {
-        soundBtn.classList.remove("muted");
-        soundBtn.textContent = "🔊 BGM";
-        if (running && !gameOver && !isPaused) {
-          playBgm();
-        }
-      }
-    }
-
-    // 저장 / 로드
-    function saveGame() {
-      if (!running) {
-        alert("게임을 시작한 후 저장할 수 있습니다.");
-        return;
-      }
-      const data = {
-        board,
-        currentPiece,
-        nextPiece,
-        score,
-        level,
-        dropInterval,
-        gameOver,
-        running,
-        isPaused,
-        combo,
-        maxCombo
-      };
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-        statusEl.textContent = "저장 완료";
-      } catch (e) {
-        alert("저장 실패: 브라우저 저장소 오류");
-      }
-    }
-
-    function loadGame() {
-      const dataStr = localStorage.getItem(STORAGE_KEY);
-      if (!dataStr) {
-        alert("저장된 게임이 없습니다.");
-        return;
-      }
-      try {
-        const data = JSON.parse(dataStr);
-        board = data.board;
-        currentPiece = data.currentPiece;
-        nextPiece = data.nextPiece;
-        score = data.score;
-        level = data.level;
-        dropInterval = data.dropInterval;
-        gameOver = data.gameOver;
-        running = data.running;
-        isPaused = data.isPaused;
-        combo = data.combo || 0;
-        maxCombo = data.maxCombo || 0;
-
-        scoreEl.textContent = score.toLocaleString();
-        levelEl.textContent = level;
-        comboCountEl.textContent = combo;
-        maxComboEl.textContent = maxCombo;
-
-        draw();
-        drawNext();
-        updateBackground();
-        updateDifficulty();
-
-        if (gameOver) {
-          statusEl.textContent = "저장된 게임: Game Over 상태";
-          running = false;
-          stopBgm();
-        } else {
-          statusEl.textContent = isPaused ? "저장된 게임: 일시정지" : "저장된 게임: 플레이 중";
-          lastTime = 0;
-          dropCounter = 0;
-          if (!running) running = true;
-          if (!isPaused && soundEnabled) playBgm();
-          requestAnimationFrame(update);
-        }
-        pauseBtn.textContent = isPaused ? "▶ Resume" : "⏸ Pause";
-      } catch (e) {
-        alert("저장된 데이터를 불러오지 못했습니다.");
-      }
-    }
-
-    // 키보드
-    document.addEventListener("keydown", (e) => {
-      if (!running || gameOver) {
-        if (e.key === "p" || e.key === "P") e.preventDefault();
-        return;
-      }
-
-      if (["ArrowLeft", "ArrowRight", "ArrowDown", "ArrowUp", " ", "p", "P"].includes(e.key)) {
-        e.preventDefault();
-      }
-
-      if (isPaused && e.key !== "p" && e.key !== "P") return;
-
-      switch (e.key) {
-        case "ArrowLeft":
-          moveHorizontal(-1);
-          break;
-        case "ArrowRight":
-          moveHorizontal(1);
-          break;
-        case "ArrowDown":
-          moveDown();
-          dropCounter = 0;
-          break;
-        case "ArrowUp":
-          rotatePiece();
-          break;
-        case " ":
-          hardDrop();
-          break;
-        case "p":
-        case "P":
-          togglePause();
-          break;
-      }
-    });
-
-    // 버튼 이벤트 (PC 마우스용)
-    startBtn.addEventListener("click", startGame);
-    pauseBtn.addEventListener("click", togglePause);
-    saveBtn.addEventListener("click", saveGame);
-    loadBtn.addEventListener("click", loadGame);
-    soundBtn.addEventListener("click", toggleSound);
-
-    // 터치/클릭 컨트롤 – pointerdown으로 통합 (모바일 클릭 오류 감소)
-    function safeAction(fn) {
-      return () => {
-        if (!running || gameOver || isPaused) return;
-        fn();
-      };
-    }
-
-    function bindControl(el, fn) {
-      el.addEventListener("pointerdown", (e) => {
-        e.preventDefault();
-        safeAction(fn)();
-      });
-    }
-
-    bindControl(btnLeft, () => moveHorizontal(-1));
-    bindControl(btnRight, () => moveHorizontal(1));
-    bindControl(btnDown, () => { moveDown(); dropCounter = 0; });
-    bindControl(btnRotate, () => rotatePiece());
-    bindControl(btnDrop, () => hardDrop());
-
-    // 초기 화면
-    board = createBoard();
-    currentPiece = randomPiece();
-    nextPiece = randomPiece();
-    draw();
-    drawNext();
-    updateBackground();
-    updateDifficulty();
-    renderRanking();
-  </script>
+	<div class="game-container">
+		<div class="left-panel">
+			<canvas id="board"></canvas>
+			<div id="comboEffect" class="combo-effect"></div>
+
+			<!-- Single button for starting/restarting the game -->
+			<button id="startBtn">▶ 게임 시작</button>
+
+			<!-- Mobile & PC click touch buttons -->
+			<div class="touch-controls">
+				<div class="touch-row">
+					<button class="touch-btn" id="btnLeft">⬅ 왼쪽</button>
+					<button class="touch-btn" id="btnRight">➡ 오른쪽</button>
+				</div>
+				<div class="touch-row">
+					<button class="touch-btn" id="btnDown">⬇ 내리기</button>
+					<button class="touch-btn" id="btnRotate">⟳ 회전</button>
+					<button class="touch-btn danger" id="btnDrop">⬇⬇ 하드 드롭</button>
+				</div>
+				<div class="touch-label">
+					탭(터치)로 조작 가능합니다.
+				</div>
+			</div>
+		</div>
+
+		<div class="right-panel">
+			<div class="info-box">
+				<h2>Next</h2>
+				<canvas id="nextCanvas" width="120" height="120"></canvas>
+			</div>
+
+			<!-- Consolidated Score, Level, and Difficulty -->
+			<div class="info-box primary-hud">
+				<div class="hud-line">
+					<span class="label">Score</span>
+					<span id="score" class="value">0</span>
+				</div>
+				<div class="hud-line">
+					<span class="label">Level</span>
+					<span id="level" class="value level-value">1</span>
+				</div>
+				<div class="small" style="text-align: right; margin-top: 4px;">
+					Speed: <span id="difficulty" class="difficulty-label">Easy</span>
+				</div>
+			</div>
+
+			<div class="info-box">
+				<h2>Combo</h2>
+				<div id="comboCount" class="hud-value">0</div>
+				<div class="small">최대 콤보 : <span id="maxCombo">0</span></div>
+			</div>
+
+			<div class="info-box">
+				<h2>Ranking (Top 5)</h2>
+				<ol id="rankingList" class="small ranking-list"></ol>
+			</div>
+		</div>
+	</div>
+
+	<!-- ==== Audio Resources (Only core sound effects remain) ==== -->
+	<audio id="se-move" src="move.mp3"></audio>
+	<audio id="se-rotate" src="rotate.mp3"></audio>
+	<audio id="se-drop" src="drop.mp3"></audio>
+	<audio id="se-clear" src="clear.mp3"></audio>
+	<audio id="se-gameover" src="gameover.mp3"></audio>
+
+	<script>
+		// ---- Basic Setup ----
+		const COLS = 10;
+		const ROWS = 20;
+		const BLOCK_SIZE = 30;
+
+		const canvas = document.getElementById("board");
+		const ctx = canvas.getContext("2d");
+		canvas.width = COLS * BLOCK_SIZE;
+		canvas.height = ROWS * BLOCK_SIZE;
+
+		const nextCanvas = document.getElementById("nextCanvas");
+		const nextCtx = nextCanvas.getContext("2d");
+
+		const scoreEl = document.getElementById("score");
+		const levelEl = document.getElementById("level");
+		const startBtn = document.getElementById("startBtn");
+		const comboCountEl = document.getElementById("comboCount");
+		const maxComboEl = document.getElementById("maxCombo");
+		const comboEffectEl = document.getElementById("comboEffect");
+		const rankingListEl = document.getElementById("rankingList");
+		const difficultyEl = document.getElementById("difficulty");
+
+		// Mobile buttons
+		const btnLeft = document.getElementById("btnLeft");
+		const btnRight = document.getElementById("btnRight");
+		const btnDown = document.getElementById("btnDown");
+		const btnRotate = document.getElementById("btnRotate");
+		const btnDrop = document.getElementById("btnDrop");
+
+		// Audio
+		const seMove = document.getElementById("se-move");
+		const seRotate = document.getElementById("se-rotate");
+		const seDrop = document.getElementById("se-drop");
+		const seClear = document.getElementById("se-clear");
+		const seGameover = document.getElementById("se-gameover");
+
+		let soundEnabled = true;
+
+		const RANKING_KEY = "tetrisRanking_v2";
+		const RANKING_MAX_SAVE = 20;
+		const RANKING_MAX_SHOW = 5;
+		let rankingCache = [];
+
+		// Tetromino shapes and colors
+		const SHAPES = {
+			I: [[1,1,1,1]],
+			J: [
+				[1,0,0],
+				[1,1,1]
+			],
+			L: [
+				[0,0,1],
+				[1,1,1]
+			],
+			O: [
+				[1,1],
+				[1,1]
+			],
+			S: [
+				[0,1,1],
+				[1,1,0]
+			],
+			T: [
+				[0,1,0],
+				[1,1,1]
+			],
+			Z: [
+				[1,1,0],
+				[0,1,1]
+			]
+		};
+
+		const COLORS = {
+			I: "#00ffff",
+			J: "#0000ff",
+			L: "#ff9900",
+			O: "#ffff00",
+			S: "#00ff00",
+			T: "#8000ff",
+			Z: "#ff0000"
+		};
+
+		let board;
+		let currentPiece;
+		let nextPiece;
+		let gameOver = false;
+		let score = 0;
+		let level = 1;
+		let combo = 0;
+		let maxCombo = 0;
+		let linesTotal = 0;
+
+		let dropInterval = 800; // ms
+		let lastTime = 0;
+		let dropCounter = 0;
+		let running = false;
+
+		// ----- Utility: Sound -----
+		function playSound(audio) {
+			if (!soundEnabled || !audio) return;
+			try {
+				audio.currentTime = 0;
+				audio.play();
+			} catch (e) {}
+		}
+
+		// ----- Background color change based on score range -----
+		function updateBackground() {
+			const body = document.body;
+			body.classList.remove("bg-1", "bg-2", "bg-3", "bg-4");
+			let cls = "bg-1";
+			if (score >= 2000) {
+				cls = "bg-4";
+			} else if (score >= 1200) {
+				cls = "bg-3";
+			} else if (score >= 500) {
+				cls = "bg-2";
+			}
+			body.classList.add(cls);
+		}
+
+		// ----- Board color + difficulty display based on level -----
+		function updateDifficulty() {
+			let label = "";
+			let color = "";
+			let shadow = "";
+
+			if (level <= 3) {
+				label = "Easy";
+				color = "#4caf50";
+				shadow = "0 0 14px rgba(76,175,80,0.8), inset 0 0 10px rgba(0,0,0,0.8)";
+			} else if (level <= 6) {
+				label = "Normal";
+				color = "#2196f3";
+				shadow = "0 0 16px rgba(33,150,243,0.9), inset 0 0 10px rgba(0,0,0,0.8)";
+			} else if (level <= 10) {
+				label = "Hard";
+				color = "#ff9800";
+				shadow = "0 0 18px rgba(255,152,0,0.9), inset 0 0 10px rgba(0,0,0,0.8)";
+			} else {
+				label = "Insane";
+				color = "#f44336";
+				shadow = "0 0 22px rgba(244,67,54,1), inset 0 0 10px rgba(0,0,0,0.8)";
+			}
+
+			difficultyEl.textContent = label;
+			canvas.style.borderColor = color;
+			canvas.style.boxShadow = shadow;
+		}
+
+		// ----- Combo Effect -----
+		function showComboEffect() {
+			if (combo < 2) return; // 2+ combo
+			comboEffectEl.textContent = combo + " COMBO!";
+			comboEffectEl.classList.add("show");
+			setTimeout(() => comboEffectEl.classList.remove("show"), 400);
+		}
+
+		// Core game logic
+		function createBoard() {
+			const matrix = [];
+			for (let r = 0; r < ROWS; r++) {
+				matrix.push(new Array(COLS).fill(0));
+			}
+			return matrix;
+		}
+
+		function makePiece(type) {
+			return {
+				x: Math.floor(COLS / 2) - 2,
+				y: 0,
+				shape: SHAPES[type].map(row => row.slice()),
+				color: COLORS[type],
+				type: type
+			};
+		}
+
+		function randomPiece() {
+			const types = Object.keys(SHAPES);
+			const type = types[Math.floor(Math.random() * types.length)];
+			return makePiece(type);
+		}
+
+		function rotate(matrix) {
+			const N = matrix.length;
+			const M = matrix[0].length;
+			const result = [];
+			for (let x = 0; x < M; x++) {
+				const row = [];
+				for (let y = N - 1; y >= 0; y--) {
+					row.push(matrix[y][x]);
+				}
+				result.push(row);
+			}
+			return result;
+		}
+
+		function isValidMove(piece, offsetX, offsetY, newShape = null) {
+			const shape = newShape || piece.shape;
+			for (let y = 0; y < shape.length; y++) {
+				for (let x = 0; x < shape[y].length; x++) {
+					if (shape[y][x]) {
+						const newX = piece.x + x + offsetX;
+						const newY = piece.y + y + offsetY;
+
+						if (newX < 0 || newX >= COLS || newY >= ROWS) {
+							return false;
+						}
+
+						if (newY >= 0 && board[newY][newX]) {
+							return false;
+						}
+					}
+				}
+			}
+			return true;
+		}
+
+		function mergePiece() {
+			const shape = currentPiece.shape;
+			for (let y = 0; y < shape.length; y++) {
+				for (let x = 0; x < shape[y].length; x++) {
+					if (shape[y][x]) {
+						const boardY = currentPiece.y + y;
+						const boardX = currentPiece.x + x;
+						if (
+							boardY >= 0 && boardY < ROWS &&
+							boardX >= 0 && boardX < COLS
+						) {
+							board[boardY][boardX] = currentPiece.color;
+						}
+					}
+				}
+			}
+		}
+
+		// Clear lines + combo handling (LEVEL UP BY TOTAL LINES)
+		function clearLines() {
+			let linesCleared = 0;
+			for (let y = ROWS - 1; y >= 0; y--) {
+				let full = true;
+				for (let x = 0; x < COLS; x++) {
+					if (!board[y][x]) {
+						full = false;
+						break;
+					}
+				}
+				if (full) {
+					board.splice(y, 1);
+					board.unshift(new Array(COLS).fill(0));
+					linesCleared++;
+					y++;
+				}
+			}
+
+			if (linesCleared > 0) {
+				const points = [0, 40, 100, 300, 1200];
+				score += points[linesCleared] * level;
+				scoreEl.textContent = score.toLocaleString();
+
+				// UPDATE TOTAL LINES CLEARED
+				linesTotal += linesCleared;
+
+				combo++;
+				if (combo > maxCombo) maxCombo = combo;
+				comboCountEl.textContent = combo;
+				maxComboEl.textContent = maxCombo;
+
+				playSound(seClear);
+				showComboEffect();
+				updateBackground();
+
+				// Level up: every 3 lines
+				const newLevel = Math.floor(linesTotal / 3) + 1;
+				if (newLevel !== level) {
+					level = newLevel;
+					levelEl.textContent = level;
+					dropInterval = Math.max(120, 800 - (level - 1) * 60);
+					updateDifficulty();
+				}
+			} else {
+				if (combo > 0) {
+					combo = 0;
+					comboCountEl.textContent = combo;
+				}
+			}
+		}
+
+		function moveDown(playSe = true) {
+			if (!isValidMove(currentPiece, 0, 1)) {
+				mergePiece();
+				clearLines();
+
+				currentPiece = {
+					x: Math.floor(COLS / 2) - 2,
+					y: 0,
+					shape: nextPiece.shape.map(r => r.slice()),
+					color: nextPiece.color,
+					type: nextPiece.type
+				};
+				nextPiece = randomPiece();
+				drawNext();
+
+				if (!isValidMove(currentPiece, 0, 0)) {
+					gameOver = true;
+					onGameOver();
+				}
+			} else {
+				currentPiece.y++;
+				if (playSe) playSound(seMove);
+			}
+			draw();
+		}
+
+		function hardDrop() {
+			if (gameOver || !running) return;
+			while (isValidMove(currentPiece, 0, 1)) {
+				currentPiece.y++;
+			}
+			mergePiece();
+			clearLines();
+
+			currentPiece = {
+				x: Math.floor(COLS / 2) - 2,
+				y: 0,
+				shape: nextPiece.shape.map(r => r.slice()),
+				color: nextPiece.color,
+				type: nextPiece.type
+			};
+			nextPiece = randomPiece();
+			drawNext();
+
+			playSound(seDrop);
+
+			if (!isValidMove(currentPiece, 0, 0)) {
+				gameOver = true;
+				onGameOver();
+			}
+			draw();
+		}
+
+		function moveHorizontal(dir) {
+			if (!isValidMove(currentPiece, dir, 0)) return;
+			currentPiece.x += dir;
+			playSound(seMove);
+			draw();
+		}
+
+		function rotatePiece() {
+			const newShape = rotate(currentPiece.shape);
+			if (isValidMove(currentPiece, 0, 0, newShape)) {
+				currentPiece.shape = newShape;
+				playSound(seRotate);
+				draw();
+			}
+		}
+
+		// Draw functions
+		function drawBlock(x, y, color) {
+			ctx.fillStyle = color;
+			ctx.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+			ctx.strokeStyle = "#111";
+			ctx.lineWidth = 2;
+			ctx.strokeRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+		}
+
+		function draw() {
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+			for (let y = 0; y < ROWS; y++) {
+				for (let x = 0; x < COLS; x++) {
+					const cell = board[y][x];
+					if (cell) {
+						drawBlock(x, y, cell);
+					}
+				}
+			}
+
+			const shape = currentPiece.shape;
+			for (let y = 0; y < shape.length; y++) {
+				for (let x = 0; x < shape[y].length; x++) {
+					if (shape[y][x]) {
+						const drawX = currentPiece.x + x;
+						const drawY = currentPiece.y + y;
+						if (drawY >= 0) {
+							drawBlock(drawX, drawY, currentPiece.color);
+						}
+					}
+				}
+			}
+		}
+
+		function drawNext() {
+			nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
+			if (!nextPiece) return;
+
+			const size = Math.min(nextCanvas.width, nextCanvas.height);
+			const cellSize = size / 4;
+
+			const shape = nextPiece.shape;
+			const h = shape.length;
+			const w = shape[0].length;
+
+			const offsetX = (4 - w) / 2;
+			const offsetY = (4 - h) / 2;
+
+			for (let y = 0; y < h; y++) {
+				for (let x = 0; x < w; x++) {
+					if (shape[y][x]) {
+						const px = (x + offsetX) * cellSize;
+						const py = (y + offsetY) * cellSize;
+						nextCtx.fillStyle = nextPiece.color;
+						nextCtx.fillRect(px, py, cellSize, cellSize);
+						nextCtx.strokeStyle = "#111";
+						nextCtx.lineWidth = 2;
+						nextCtx.strokeRect(px, py, cellSize, cellSize);
+					}
+				}
+			}
+		}
+
+		// ---- Ranking ----
+		function loadRankingData() {
+			try {
+				const str = localStorage.getItem(RANKING_KEY);
+				if (!str) return [];
+				const data = JSON.parse(str);
+				if (!Array.isArray(data)) return [];
+				// score NaN 방지
+				return data
+					.map(item => ({
+						name: String(item.name ?? "Player"),
+						score: Number(item.score) || 0,
+						date: item.date || new Date().toISOString()
+					}))
+					.sort((a, b) => b.score - a.score);
+			} catch (e) {
+				return [];
+			}
+		}
+
+		function saveRankingData(list) {
+			try {
+				localStorage.setItem(RANKING_KEY, JSON.stringify(list));
+			} catch (e) {
+				// private 모드 등에서는 실패 가능
+			}
+		}
+
+		function renderRanking() {
+			rankingListEl.innerHTML = "";
+
+			if (!rankingCache || rankingCache.length === 0) {
+				const li = document.createElement("li");
+				li.textContent = "아직 기록이 없습니다.";
+				rankingListEl.appendChild(li);
+				return;
+			}
+
+			const topList = rankingCache.slice(0, RANKING_MAX_SHOW);
+			topList.forEach((item, idx) => {
+				const li = document.createElement("li");
+				li.textContent = `${idx + 1}. ${item.name} - ${item.score.toLocaleString()}점`;
+				rankingListEl.appendChild(li);
+			});
+		}
+
+		function addRanking(scoreValue) {
+			if (scoreValue <= 0) return;
+
+			let name = prompt("게임 오버!\n랭킹에 점수를 저장하려면 이름을 입력하세요.", "플레이어");
+			if (name === null) return; // 취소
+			name = name.trim();
+			if (!name) name = "Player";
+
+			const entry = {
+				name,
+				score: scoreValue,
+				date: new Date().toISOString()
+			};
+
+			rankingCache.push(entry);
+			rankingCache.sort((a, b) => b.score - a.score);
+			if (rankingCache.length > RANKING_MAX_SAVE) {
+				rankingCache.splice(RANKING_MAX_SAVE);
+			}
+			saveRankingData(rankingCache);
+		}
+
+		function handleRankingOnGameOver() {
+			addRanking(score);
+			renderRanking();
+		}
+
+		function onGameOver() {
+			running = false;
+			playSound(seGameover);
+			handleRankingOnGameOver();
+			startBtn.textContent = "▶ 다시 시작";
+		}
+
+		// Main loop
+		function update(time = 0) {
+			if (!running || gameOver) {
+				requestAnimationFrame(update);
+				return;
+			}
+
+			const deltaTime = time - lastTime;
+			lastTime = time;
+			
+			dropCounter += deltaTime;
+			if (dropCounter > dropInterval) {
+				moveDown(false);
+				dropCounter = 0;
+			}
+
+			requestAnimationFrame(update);
+		}
+
+		// Game Start/Reset
+		function resetGame() {
+			board = createBoard();
+			currentPiece = randomPiece();
+			nextPiece = randomPiece();
+			gameOver = false;
+			score = 0;
+			level = 1;
+			combo = 0;
+			maxCombo = 0;
+			linesTotal = 0;
+			dropInterval = 800;
+			scoreEl.textContent = score;
+			levelEl.textContent = level;
+			comboCountEl.textContent = combo;
+			maxComboEl.textContent = maxCombo;
+			
+			running = true; 
+			lastTime = 0;
+			dropCounter = 0;
+
+			draw();
+			drawNext();
+			updateBackground();
+			updateDifficulty();
+			startBtn.textContent = "▶ 플레이 중...";
+
+			requestAnimationFrame(update);
+		}
+
+		// Keyboard controls
+		document.addEventListener("keydown", (e) => {
+			// Prevent page scroll for space/arrow keys
+			if (["ArrowLeft", "ArrowRight", "ArrowDown", "ArrowUp", " "].includes(e.key)) {
+				e.preventDefault();
+			}
+
+			if (!running || gameOver) {
+				return;
+			}
+
+			switch (e.key) {
+				case "ArrowLeft":
+					moveHorizontal(-1);
+					break;
+				case "ArrowRight":
+					moveHorizontal(1);
+					break;
+				case "ArrowDown":
+					moveDown();
+					dropCounter = 0;
+					break;
+				case "ArrowUp":
+					rotatePiece();
+					break;
+				case " ":
+					hardDrop();
+					break;
+			}
+		});
+
+		// Button event (Start/Restart)
+		startBtn.addEventListener("click", resetGame);
+
+		// Touch/Click controls – pointerdown 사용
+		function safeAction(fn) {
+			return () => {
+				if (!running || gameOver) return;
+				fn();
+			};
+		}
+
+		function bindControl(el, fn) {
+			el.addEventListener("pointerdown", (e) => {
+				e.preventDefault();
+				safeAction(fn)();
+			});
+		}
+
+		bindControl(btnLeft, () => moveHorizontal(-1));
+		bindControl(btnRight, () => moveHorizontal(1));
+		bindControl(btnDown, () => { moveDown(); dropCounter = 0; });
+		bindControl(btnRotate, () => rotatePiece());
+		bindControl(btnDrop, () => hardDrop());
+
+		// Initial setup
+		board = createBoard();
+		currentPiece = randomPiece();
+		nextPiece = randomPiece();
+		updateBackground();
+		updateDifficulty();
+		draw();
+		drawNext();
+
+		// 랭킹 캐시 초기화 & 표시
+		rankingCache = loadRankingData();
+		renderRanking();
+	</script>
 </body>
 </html>
